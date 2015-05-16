@@ -1,0 +1,5 @@
+use sbcdump like this:
+
+sbcdump -r /tmp/btsnoop_hci.log
+
+aplay -f cd -r 44100 *.pcm
