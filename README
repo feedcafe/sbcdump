@@ -1,4 +1,5 @@
-use sbcdump like this:
+sbcdump is used for extract a2dp audio data from btsnoop file, and do
+sbc decode, use sbcdump like this:
 
 sbcdump -r /tmp/btsnoop_hci.log
 
