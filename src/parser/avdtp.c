@@ -616,9 +616,35 @@ static int open_file(char *file)
 	return fd;
 }
 
-#define FRAME_SIZE		109
 #define BUF_SIZE		8192
 sbc_t sbc;
+
+static int calc_frame_len(struct sbc_frame_hdr *hdr, int nrof_blocks)
+{
+	int tmp, nrof_subbands;
+
+	nrof_subbands = (hdr->subbands + 1) * 4;
+
+	switch (hdr->channel_mode) {
+	case 0x00:
+		nrof_subbands /= 2;
+		tmp = nrof_blocks * hdr->bitpool;
+		break;
+	case 0x01:
+		tmp = nrof_blocks * hdr->bitpool * 2;
+		break;
+	case 0x02:
+		tmp = nrof_blocks * hdr->bitpool;
+		break;
+	case 0x03:
+		tmp = nrof_blocks * hdr->bitpool + nrof_subbands;
+		break;
+	default:
+		return 0;
+	}
+
+	return (nrof_subbands + ((tmp + 7) / 8));
+}
 
 int sbc_audio_dump(struct frame *frm)
 {
@@ -630,6 +656,9 @@ int sbc_audio_dump(struct frame *frm)
 	char sbc_file[256];
 	int pcm_fd = frm->pcm_fd;
 	int sbc_fd = frm->sbc_fd;
+	struct sbc_frame_hdr *hdr;
+	unsigned int count;
+	int blocks;
 
 	int framelen;
 
@@ -669,13 +698,19 @@ int sbc_audio_dump(struct frame *frm)
 		sbc.endian = SBC_LE;
 	}
 
+	/* calulate frame length */
+	hdr = (struct sbc_frame_hdr *)&ptr[1];
+	blocks = (hdr->blocks + 1) * 4;
+	count = calc_frame_len(hdr, blocks);
+	count += 4;
+
 	for (i = 0; i < ptr[0]; i++) {
 		/* decode audio data */
-		framelen = sbc_decode(&sbc, &ptr[1] + i * FRAME_SIZE,
-				FRAME_SIZE, pcm_buf, BUF_SIZE, &len);
+		framelen = sbc_decode(&sbc, &ptr[1] + i * count,
+				count, pcm_buf, BUF_SIZE, &len);
 		printf("len=%d, frame len=%d\n", len, framelen);
 		rc = write(pcm_fd, pcm_buf, len);
-		rc = write(sbc_fd, &ptr[1] + i * FRAME_SIZE, FRAME_SIZE);
+		rc = write(sbc_fd, &ptr[1] + i * count, count);
 	}
 
 	return rc;
