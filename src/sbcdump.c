@@ -296,6 +296,7 @@ static void read_dump(int fd)
 		exit(1);
 	}
 	frm.pcm_fd = -1;
+	frm.sbc_fd = -1;
 
 	while (1) {
 		if (parser.flags & DUMP_PKTLOG)

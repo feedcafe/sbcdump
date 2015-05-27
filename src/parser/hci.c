@@ -933,6 +933,9 @@ static inline void disconnect_dump(int level, struct frame *frm)
 	close(frm->pcm_fd);
 	frm->pcm_fd = -1;
 
+	close(frm->sbc_fd);
+	frm->sbc_fd = -1;
+
 	p_indent(level, frm);
 	printf("Reason: %s\n", status2str(cp->reason));
 }

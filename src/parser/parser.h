@@ -50,6 +50,7 @@ struct frame {
 	int		pppdump_fd;
 	int		audio_fd;
 	int		pcm_fd;		/* save pcm audio data */
+	int		sbc_fd;		/* save sbc encoded data */
 };
 
 /* Parser flags */

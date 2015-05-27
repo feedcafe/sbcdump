@@ -601,7 +601,7 @@ static inline void delay_report(int level, uint8_t hdr, struct frame *frm)
 	}
 }
 
-static int open_pcm(char *file)
+static int open_file(char *file)
 {
 	int fd, open_flags;
 
@@ -609,7 +609,7 @@ static int open_pcm(char *file)
 
 	fd = open(file, open_flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if (fd < 0) {
-		perror("Can't open dump file");
+		fprintf(stderr, "Can't open file: %s\n", file);
 		exit(1);
 	}
 
@@ -627,7 +627,9 @@ int sbc_audio_dump(struct frame *frm)
 	int rc = -1;
 	struct tm tm;
 	char audio_file[256];
+	char sbc_file[256];
 	int pcm_fd = frm->pcm_fd;
+	int sbc_fd = frm->sbc_fd;
 
 	int framelen;
 
@@ -636,6 +638,8 @@ int sbc_audio_dump(struct frame *frm)
 
 	if (pcm_fd < fileno(stderr)) {
 		tm = *localtime(&frm->ts.tv_sec);
+
+		/* pcm */
 		sprintf(audio_file, "a2dp-%d-%d%02d%02d-%02d%02d%02d.pcm",
 				frm->handle,
 				tm.tm_year + 1900,
@@ -645,28 +649,34 @@ int sbc_audio_dump(struct frame *frm)
 				tm.tm_min,
 				tm.tm_sec);
 
-		pcm_fd = open_pcm(audio_file);
+		pcm_fd = open_file(audio_file);
 		frm->pcm_fd = pcm_fd;
+
+		/* sbc */
+		sprintf(sbc_file, "a2dp-%d-%d%02d%02d-%02d%02d%02d.sbc",
+				frm->handle,
+				tm.tm_year + 1900,
+				tm.tm_mon + 1,
+				tm.tm_mday,
+				tm.tm_hour,
+				tm.tm_min,
+				tm.tm_sec);
+		sbc_fd = open_file(sbc_file);
+		frm->sbc_fd = sbc_fd;
 
 		/* init sbc codec */
 		sbc_init(&sbc, 0L);
 		sbc.endian = SBC_LE;
 	}
 
-#if 1
 	for (i = 0; i < ptr[0]; i++) {
 		/* decode audio data */
 		framelen = sbc_decode(&sbc, &ptr[1] + i * FRAME_SIZE,
 				FRAME_SIZE, pcm_buf, BUF_SIZE, &len);
 		printf("len=%d, frame len=%d\n", len, framelen);
 		rc = write(pcm_fd, pcm_buf, len);
+		rc = write(sbc_fd, &ptr[1] + i * FRAME_SIZE, FRAME_SIZE);
 	}
-#else
-	for (i = 0; i < ptr[0]; i++) {
-		rc = write(pcm_fd, &ptr[1] + i * FRAME_SIZE, FRAME_SIZE);
-	}
-
-#endif
 
 	return rc;
 }
