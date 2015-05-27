@@ -49,6 +49,7 @@ struct frame {
 	struct timeval	ts;
 	int		pppdump_fd;
 	int		audio_fd;
+	int		pcm_fd;		/* save pcm audio data */
 };
 
 /* Parser flags */

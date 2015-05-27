@@ -627,14 +627,14 @@ int sbc_audio_dump(struct frame *frm)
 	int rc = -1;
 	struct tm tm;
 	char audio_file[256];
-	int audio_fd = frm->audio_fd;
+	int pcm_fd = frm->pcm_fd;
 
 	int framelen;
 
 	char pcm_buf[BUF_SIZE]; /* pcm data */
 	size_t len;
 
-	if (audio_fd < fileno(stderr)) {
+	if (pcm_fd < fileno(stderr)) {
 		tm = *localtime(&frm->ts.tv_sec);
 		sprintf(audio_file, "a2dp-%d-%d%02d%02d-%02d%02d%02d.pcm",
 				frm->handle,
@@ -645,8 +645,8 @@ int sbc_audio_dump(struct frame *frm)
 				tm.tm_min,
 				tm.tm_sec);
 
-		audio_fd = open_pcm(audio_file);
-		frm->audio_fd = audio_fd;
+		pcm_fd = open_pcm(audio_file);
+		frm->pcm_fd = pcm_fd;
 
 		/* init sbc codec */
 		sbc_init(&sbc, 0L);
@@ -659,15 +659,14 @@ int sbc_audio_dump(struct frame *frm)
 		framelen = sbc_decode(&sbc, &ptr[1] + i * FRAME_SIZE,
 				FRAME_SIZE, pcm_buf, BUF_SIZE, &len);
 		printf("len=%d, frame len=%d\n", len, framelen);
-		rc = write(audio_fd, pcm_buf, len);
+		rc = write(pcm_fd, pcm_buf, len);
 	}
 #else
 	for (i = 0; i < ptr[0]; i++) {
-		rc = write(audio_fd, &ptr[1] + i * FRAME_SIZE, FRAME_SIZE);
+		rc = write(pcm_fd, &ptr[1] + i * FRAME_SIZE, FRAME_SIZE);
 	}
 
 #endif
-	//close(audio_fd);
 
 	return rc;
 }

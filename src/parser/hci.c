@@ -930,8 +930,8 @@ static inline void disconnect_dump(int level, struct frame *frm)
 	p_indent(level, frm);
 	printf("handle %d reason 0x%2.2x\n", btohs(cp->handle), cp->reason);
 
-	close(frm->audio_fd);
-	frm->audio_fd = -1;
+	close(frm->pcm_fd);
+	frm->pcm_fd = -1;
 
 	p_indent(level, frm);
 	printf("Reason: %s\n", status2str(cp->reason));

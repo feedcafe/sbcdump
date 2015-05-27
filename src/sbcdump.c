@@ -295,6 +295,7 @@ static void read_dump(int fd)
 		perror("Can't allocate data buffer");
 		exit(1);
 	}
+	frm.pcm_fd = -1;
 
 	while (1) {
 		if (parser.flags & DUMP_PKTLOG)
