@@ -122,6 +122,9 @@ struct parser_t {
 	int audio_fd;
 };
 
+#define printf(fmt, args...) \
+	do { } while (0)
+
 extern struct parser_t parser;
 
 void init_parser(unsigned long flags, unsigned long filter,
