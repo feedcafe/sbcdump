@@ -1,0 +1,2 @@
+1. add wav header to pcm
+2. fix cannot parse second part of btsnoop_hci-002.log issue
